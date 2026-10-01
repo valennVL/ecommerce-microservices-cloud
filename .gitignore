@@ -1,0 +1,32 @@
+# Entorno virtual y dependencias de Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Variables de entorno con claves secretas
+.env
+
+# Datos persistentes locales de bases de datos y Consul
+mysql_data/
+users_db_data/
+products_db_data/
+orders_db_data/
+consul_data/
+
+# Archivos del sistema operativo y editores
+.DS_Store
+.idea/
+.vscode/
+# Ignorar todos los archivos y carpetas ocultas del sistema
+.*
+!.gitignore
+!.env.example
+
+# Ignorar datos locales y cachés
+__pycache__/
+*.pyc
+mysql_data/
+consul_data/
+venv/
+.venv/

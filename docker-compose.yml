@@ -1,0 +1,149 @@
+services:
+
+
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: consul
+    restart: always
+    ports:
+      - "8500:8500"    
+      - "8600:8600/udp" 
+    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -bind=0.0.0.0"
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  mysql-users:
+    image: mysql:8.0
+    container_name: mysql-users
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${USERS_DB}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-users-data:/var/lib/mysql
+      - ./init-users.sql:/docker-entrypoint-initdb.d/init-users.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 300s  
+
+  mysql-products:
+    image: mysql:8.0
+    container_name: mysql-products
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${PRODUCTS_DB}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-products-data:/var/lib/mysql
+      - ./init-products.sql:/docker-entrypoint-initdb.d/init-products.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 300s  
+
+  mysql-orders:
+    image: mysql:8.0
+    container_name: mysql-orders
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${ORDERS_DB}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-orders-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  micro-users:
+    build: ./microUsers
+    container_name: micro-users
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      MYSQL_HOST: ${USERS_DB_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${USERS_DB}
+      CONSUL_HOST: ${CONSUL_HOST}
+      SERVICE_HOST: micro-users
+    depends_on:
+      mysql-users:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+
+  micro-products:
+    build: ./microProducts
+    container_name: micro-products
+    restart: always
+    ports:
+      - "5003:5003"
+    environment:
+      MYSQL_HOST: ${PRODUCTS_DB_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${PRODUCTS_DB}
+      CONSUL_HOST: ${CONSUL_HOST}
+      SERVICE_HOST: micro-products
+    depends_on:
+      mysql-products:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+
+  micro-orders:
+    build: ./microOrders
+    container_name: micro-orders
+    restart: always
+    ports:
+      - "5004:5004"
+    environment:
+      MYSQL_HOST: ${ORDERS_DB_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DB: ${ORDERS_DB}
+      CONSUL_HOST: ${CONSUL_HOST}
+      SERVICE_HOST: micro-orders
+    depends_on:
+      mysql-orders:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+      micro-products:
+        condition: service_started
+
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: always
+    ports:
+      - "5001:5001"
+    depends_on:
+      - micro-users
+      - micro-products
+      - micro-orders
+
+volumes:
+  mysql-users-data:
+  mysql-products-data:
+  mysql-orders-data:

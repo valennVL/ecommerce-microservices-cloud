@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Store</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      padding-top: 50px;
+      padding-bottom: 20px;
+    }
+    .navbar {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarCollapse">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="/products">Product Management</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/users">User Management</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/orders">Order Management</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="handleLogout()">Logout</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <h2>Dashboard</h2>
+  <p>Welcome, <strong id="welcome-username"></strong></p>
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-primary mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Products</h5>
+          <p class="card-text">Manage your product catalog and inventory.</p>
+          <a href="/products" class="btn btn-light">Go to Products</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Users</h5>
+          <p class="card-text">Manage system users and credentials.</p>
+          <a href="/users" class="btn btn-light">Go to Users</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-warning mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Orders</h5>
+          <p class="card-text">View and manage purchase orders.</p>
+          <a href="/orders" class="btn btn-light">Go to Orders</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('welcome-username').textContent =
+    sessionStorage.getItem('username') || 'User';
+
+  function handleLogout() {
+    fetch('http://192.168.90.3:5002/api/logout', {
+      method: 'POST',
+      credentials: 'include'
+    }).finally(() => {
+      sessionStorage.clear();
+      window.location.href = '/';
+    });
+  }
+</script>
+
+</body>
+</html>
